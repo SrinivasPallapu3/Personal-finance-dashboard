@@ -1,0 +1,14 @@
+[
+  //add transaction in json format manually, add in UI to show up here
+  /*
+  {
+        "id": 1,
+        "title": "Paycheck",
+        "amount": 10000,
+        "date": "2025-09-1",
+        "type": "income",
+        "category": "Salary",
+        "notes": ""
+    }
+  */
+]
