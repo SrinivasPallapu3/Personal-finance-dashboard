@@ -19,7 +19,7 @@ def load_data():
                 if isinstance(data, list):
                     return data
                 else:
-                    st.warning("Data file corrupted. Initializing with an empty list.")
+                    st.warning("Add some transactions to view. Initializing with an empty list.")
                     return []
         except json.JSONDecodeError:
             st.error("There was a problem reading your data file. It may be corrupted or in the wrong format.")
