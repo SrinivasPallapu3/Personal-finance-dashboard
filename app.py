@@ -22,7 +22,7 @@ def load_data():
                     st.warning("Data file corrupted. Initializing with an empty list.")
                     return []
         except json.JSONDecodeError:
-            st.error("Error decoding JSON. Please check your data.json file.")
+            st.error("Add some transactions to view.")
             return []
     return []
 
