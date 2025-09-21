@@ -35,7 +35,7 @@ def save_data(data):
 
 def main():
     st.set_page_config(
-        page_title="September Financial Tracker",
+        page_title="Financial Tracker",
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -52,7 +52,7 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-    st.title("💸 September Financial Tracker")
+    st.title("💸 Financial Tracker")
 
     # Load data from the file
     if 'transactions' not in st.session_state:
