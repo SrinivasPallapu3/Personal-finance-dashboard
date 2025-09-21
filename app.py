@@ -22,7 +22,7 @@ def load_data():
                     st.warning("Data file corrupted. Initializing with an empty list.")
                     return []
         except json.JSONDecodeError:
-            st.error("Add some transactions to view.")
+            st.error("There was a problem reading your data file. It may be corrupted or in the wrong format.")
             return []
     return []
 
@@ -93,108 +93,134 @@ def main():
 
     # --- Main Dashboard ---
     st.header("Dashboard")
-    
-    # Calculate totals
-    total_income = df[df['type'] == 'income']['amount'].sum() if not df.empty else 0
-    total_expenses = df[df['type'] == 'expense']['amount'].sum() if not df.empty else 0
-    total_deductions = df[df['type'] == 'deduction']['amount'].sum() if not df.empty else 0
-    remaining_balance = total_income - total_expenses - total_deductions
 
-    # Metrics section
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric(label="Total Income", value=f"${total_income:,.2f}")
-    with col2:
-        st.metric(label="Total Expenses", value=f"${total_expenses:,.2f}")
-    with col3:
-        st.metric(label="Total Deductions", value=f"${total_deductions:,.2f}")
-    with col4:
-        st.metric(label="Remaining Balance", value=f"${remaining_balance:,.2f}")
-
-    st.markdown("---")
-
-    # --- Charts Section ---
-    st.header("Visualizations")
-    if not df.empty:
-        # Horizontal Bar Chart: Income vs (Expenses + Deductions)
-        df_summary = pd.DataFrame({
-            'Category': ['Income', 'Expenses + Deductions'],
-            'Amount': [total_income, total_expenses + total_deductions]
-        })
-        fig1 = px.bar(
-            df_summary,
-            y='Category',
-            x='Amount',
-            orientation='h',
-            title='Income vs. Expenses + Deductions',
-            color='Category',
-            color_discrete_map={'Income': '#10B981', 'Expenses + Deductions': '#EF4444'}
-        )
-        st.plotly_chart(fig1, use_container_width=True)
-
-        # Pie Chart: Expenses Breakdown
-        expense_df = df[df['type'] == 'expense'].groupby('category')['amount'].sum().reset_index()
-        fig2 = px.pie(
-            expense_df,
-            values='amount',
-            names='category',
-            title='Expenses Breakdown by Category'
-        )
-        st.plotly_chart(fig2, use_container_width=True)
-        
-        # Vertical Bar Chart: Income vs Expenses vs Deductions
-        df_totals = pd.DataFrame({
-            'Category': ['Income', 'Expenses', 'Deductions'],
-            'Amount': [total_income, total_expenses, total_deductions]
-        })
-        fig3 = px.bar(
-            df_totals,
-            x='Category',
-            y='Amount',
-            title='Income vs. Expenses vs. Deductions',
-            color='Category',
-            color_discrete_map={'Income': '#2563EB', 'Expenses': '#B91C1C', 'Deductions': '#F59E0B'}
-        )
-        st.plotly_chart(fig3, use_container_width=True)
-
+    # Check if data.json is empty and display a message
+    if not st.session_state.transactions:
+        st.info("Add a transaction to get started. Data file is currently empty.")
     else:
-        st.info("Add some transactions in the sidebar to see the dashboard and charts.")
+        # Get unique months from the data for filtering
+        df['date'] = pd.to_datetime(df['date'])
+        unique_months = df['date'].dt.strftime('%B %Y').unique().tolist()
+        unique_months.sort(key=lambda x: pd.to_datetime(x, format='%B %Y'))
+        all_months_option = 'All Months'
+        unique_months.insert(0, all_months_option)
 
-    st.markdown("---")
+        # Filter section in the main dashboard
+        st.subheader("Filter and Share")
+        selected_month_label = st.selectbox(
+            "Select a Month to Filter",
+            options=unique_months,
+            index=0
+        )
+        
+        # Filter the DataFrame based on the selected month
+        if selected_month_label != all_months_option:
+            filtered_df = df[df['date'].dt.strftime('%B %Y') == selected_month_label]
+        else:
+            filtered_df = df
 
-    # --- Download All Transactions as CSV ---
-    if not df.empty:
-        csv_data = df.to_csv(index=False).encode('utf-8')
+        st.markdown("---")
+        
+        # Calculate totals from the filtered data
+        total_income = filtered_df[filtered_df['type'] == 'income']['amount'].sum() if not filtered_df.empty else 0
+        total_expenses = filtered_df[filtered_df['type'] == 'expense']['amount'].sum() if not filtered_df.empty else 0
+        total_deductions = filtered_df[filtered_df['type'] == 'deduction']['amount'].sum() if not filtered_df.empty else 0
+        remaining_balance = total_income - total_expenses - total_deductions
+
+        # Metrics section
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric(label="Total Income", value=f"${total_income:,.2f}")
+        with col2:
+            st.metric(label="Total Expenses", value=f"${total_expenses:,.2f}")
+        with col3:
+            st.metric(label="Total Deductions", value=f"${total_deductions:,.2f}")
+        with col4:
+            st.metric(label="Remaining Balance", value=f"${remaining_balance:,.2f}")
+
+        st.markdown("---")
+
+        # --- Charts Section ---
+        st.header("Visualizations")
+        if not filtered_df.empty:
+            # Horizontal Bar Chart: Income vs (Expenses + Deductions)
+            df_summary = pd.DataFrame({
+                'Category': ['Income', 'Expenses + Deductions'],
+                'Amount': [total_income, total_expenses + total_deductions]
+            })
+            fig1 = px.bar(
+                df_summary,
+                y='Category',
+                x='Amount',
+                orientation='h',
+                title='Income vs. Expenses + Deductions',
+                color='Category',
+                color_discrete_map={'Income': '#10B981', 'Expenses + Deductions': '#EF4444'}
+            )
+            st.plotly_chart(fig1, use_container_width=True)
+
+            # Pie Chart: Expenses Breakdown
+            expense_df = filtered_df[filtered_df['type'] == 'expense'].groupby('category')['amount'].sum().reset_index()
+            fig2 = px.pie(
+                expense_df,
+                values='amount',
+                names='category',
+                title='Expenses Breakdown by Category'
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+            
+            # Vertical Bar Chart: Income vs Expenses vs Deductions
+            df_totals = pd.DataFrame({
+                'Category': ['Income', 'Expenses', 'Deductions'],
+                'Amount': [total_income, total_expenses, total_deductions]
+            })
+            fig3 = px.bar(
+                df_totals,
+                x='Category',
+                y='Amount',
+                title='Income vs. Expenses vs. Deductions',
+                color='Category',
+                color_discrete_map={'Income': '#2563EB', 'Expenses': '#B91C1C', 'Deductions': '#F59E0B'}
+            )
+            st.plotly_chart(fig3, use_container_width=True)
+        else:
+            st.info(f"No transactions found for {selected_month_label}.")
+
+
+        st.markdown("---")
+
+        # --- Download All Transactions as CSV ---
+        csv_data = filtered_df.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="Download data",
+            label=f"Download {selected_month_label} Data",
             data=csv_data,
-            file_name='financial_transactions.csv',
+            file_name=f'financial_transactions_{selected_month_label}.csv',
             mime='text/csv',
         )
     
-    st.markdown("---")
+        st.markdown("---")
     
-   # --- Separate Transaction Histories ---
-    st.header("Income Transactions")
-    income_df = df[df['type'] == 'income'].drop(columns=['id'])
-    if not income_df.empty:
-        st.dataframe(income_df.sort_values(by="date", ascending=False), use_container_width=True, hide_index=True)
-    else:
-        st.info("No income transactions to display.")
+        # --- Separate Transaction Histories ---
+        st.header("Income Transactions")
+        income_df = filtered_df[filtered_df['type'] == 'income']
+        if not income_df.empty:
+            st.dataframe(income_df.drop(columns=['id']), use_container_width=True, hide_index=True)
+        else:
+            st.info("No income transactions to display for this period.")
 
-    st.header("Expense Transactions")
-    expense_df = df[df['type'] == 'expense'].drop(columns=['id'])
-    if not expense_df.empty:
-        st.dataframe(expense_df.sort_values(by="date", ascending=False), use_container_width=True, hide_index=True)
-    else:
-        st.info("No expense transactions to display.")
+        st.header("Expense Transactions")
+        expense_df = filtered_df[filtered_df['type'] == 'expense']
+        if not expense_df.empty:
+            st.dataframe(expense_df.drop(columns=['id']), use_container_width=True, hide_index=True)
+        else:
+            st.info("No expense transactions to display for this period.")
     
-    st.header("Deduction Transactions")
-    deduction_df = df[df['type'] == 'deduction'].drop(columns=['id'])
-    if not deduction_df.empty:
-        st.dataframe(deduction_df.sort_values(by="date", ascending=False), use_container_width=True, hide_index=True)
-    else:
-        st.info("No deduction transactions to display.")
+        st.header("Deduction Transactions")
+        deduction_df = filtered_df[filtered_df['type'] == 'deduction']
+        if not deduction_df.empty:
+            st.dataframe(deduction_df.drop(columns=['id']), use_container_width=True, hide_index=True)
+        else:
+            st.info("No deduction transactions to display for this period.")
 
 
 if __name__ == "__main__":
