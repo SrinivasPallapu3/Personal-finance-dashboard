@@ -55,19 +55,6 @@ The app will automatically open in your default web browser.
 
 ---
 
-## 🚀 Deployment
-
-You can easily deploy this app using **Streamlit Community Cloud**:
-
-1. Make sure your repository includes:
-   - `app.py`
-   - `requirements.txt`
-2. Push your code to **GitHub**.
-3. Go to [Streamlit Community Cloud](https://streamlit.io/cloud) and connect your GitHub repository.
-4. Deploy and share your live app!
-
----
-
 ## 📄 Example `requirements.txt`
 
 ```txt
@@ -75,27 +62,6 @@ streamlit
 pandas
 plotly
 ```
-
----
-
-## 📚 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 📊 Screenshots
-
-*Coming Soon: Add screenshots of your dashboard and charts here!*
-
----
-
-## 👥 Contributing
-
-Contributions are welcome! If you want to enhance this project, feel free to:
-- Open an **issue** to report bugs or suggest features.
-- Submit a **pull request** with your improvements.
-
 ---
 
 ## 🔗 Links
